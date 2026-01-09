@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gセーブ率</title>
+
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #f6f6f6;
+  margin: 0;
+  padding: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
+.set {
+  background: #fff;
+  border: 2px solid #333;
+  padding: 6px;
+}
+
+.set-title {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.cells {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.cell {
+  border: 1px solid #555;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 52px;
+}
+
+.left, .right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  user-select: none;
+}
+
+.left {
+  border-right: 1px solid #aaa;
+}
+
+.cell-percent {
+  grid-column: 1 / 3;
+  font-size: 11px;
+  text-align: center;
+}
+
+.set-summary {
+  text-align: center;
+  font-size: 13px;
+  margin-top: 4px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const SETS = 18;
+const grid = document.getElementById('grid');
+
+function createSet() {
+  const set = document.createElement('div');
+  set.className = 'set';
+
+  set.innerHTML = `
+    <input class="set-title" placeholder="割合の名前">
+    <div class="cells">
+      ${'<div class="cell"><div class="left">0</div><div class="right">0</div><div class="cell-percent">0%</div></div>'.repeat(9)}
+    </div>
+    <div class="set-summary">0 / 0 (0%)</div>
+  `;
+
+  set.querySelectorAll('.left, .right').forEach(el => {
+    el.addEventListener('click', () => {
+      el.textContent = Number(el.textContent) + 1;
+      update();
+      save();
+    });
+
+    el.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      el.textContent = Math.max(0, Number(el.textContent) - 1);
+      update();
+      save();
+    });
+  });
+
+  grid.appendChild(set);
+}
+
+function update() {
+  document.querySelectorAll('.set').forEach(set => {
+    let n = 0;
+    let d = 0;
+
+    set.querySelectorAll('.cell').forEach(cell => {
+      const ln = Number(cell.querySelector('.left').textContent);
+      const rd = Number(cell.querySelector('.right').textContent);
+
+      n += ln;
+      d += rd;
+
+      cell.querySelector('.cell-percent').textContent =
+        rd > 0 ? (ln / rd * 100).toFixed(1) + '%' : '0%';
+    });
+
+    set.querySelector('.set-summary').textContent =
+      `${n} / ${d} (${d > 0 ? (n / d * 100).toFixed(1) : 0}%)`;
+  });
+}
+
+function save() {
+  localStorage.setItem('gSaveRate', document.body.innerHTML);
+}
+
+function load() {
+  const d = localStorage.getItem('gSaveRate');
+  if (d) document.body.innerHTML = d;
+}
+
+load();
+for (let i = 0; i < SETS; i++) {
+  createSet();
+}
+update();
+</script>
+
+</body>
+</html>
